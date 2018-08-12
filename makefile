@@ -5,7 +5,7 @@ START_URL ?= trademe.co.nz/flatmates-wanted/auckland
 
 .PHONY: scrapy-shell
 scrapy-shell:
-	(cd trademe && $(DCMD) scrapy shell $(START_URL))
+	-(cd trademe && $(DCMD) scrapy shell $(START_URL))
 
 .PHONY: docker
 docker: 
@@ -17,4 +17,9 @@ run-docker:
 
 .PHONY: run-docker-root
 run-docker-root:
-	docker run --rm -it -e HOME=/work -v $$(pwd):/work $(IMAGE):$(TAG) bash
+	# Start docker interactive as root
+	-docker run --rm -it -e HOME=/work -v $$(pwd):/work -w /work $(IMAGE):$(TAG) bash
+
+.PHONY: clean
+clean:
+	sudo rm -rf .cache .bash_history .ipython
