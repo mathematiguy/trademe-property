@@ -102,3 +102,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# cache files:
+**/.cache 
+**/.bash_history 
+**/.ipython
