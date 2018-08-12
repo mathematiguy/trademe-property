@@ -114,3 +114,8 @@ venv.bak/
 **/.npm
 **/.bash_history
 **/.python_history
+
+# data files:
+data/*.csv
+trademe/data/*.csv
+trademe/crawls/*.crawl
