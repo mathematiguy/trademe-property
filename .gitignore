@@ -119,3 +119,4 @@ venv.bak/
 data/*.csv
 trademe/data/*.csv
 trademe/crawls/*.crawl
+analysis/*.ipynb
