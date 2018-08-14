@@ -3,14 +3,15 @@ REGIONS := northland auckland waikato bay-of-plenty gisborne hawke\'s-bay tarana
 DEFAULT_REGION ?= auckland
 IMAGE ?= $(DOCKER_ID_USER)/trademe:latest
 DCMD ?= docker run --rm -u $$(id -u):$$(id -g) -e HOME=/work -v $$(pwd):/work -w /work
-CACHE_FOLDERS ?= .config .ipynb_checkpoints .cache .ipython .jupyter .local .ipython .npm .bash_history .python_history
-START_URL ?= trademe.co.nz/flatmates-wanted/auckland/
+CACHE ?= .config .ipynb_checkpoints .cache .ipython .jupyter .local .ipython .npm .bash_history .python_history
+PROJECT_ROOT := $(shell git rev-parse --show-toplevel)
+START_URL ?= trademe.co.nz/flatmates-wanted/$(DEFAULT_REGION)/
 LOG_LEVEL ?= DEBUG
 
 .PHONY: crawl
 crawl: crawl-$(DEFAULT_REGION)
 
-crawl-all: $(addprefix crawl-, $(REGIONS))
+crawl_all: $(addprefix crawl-, $(REGIONS))
 
 crawl-%:
 	(cd trademe && \
@@ -20,9 +21,15 @@ crawl-%:
 		--loglevel $(LOG_LEVEL) \
 		--logfile logs/$*-flatmates.log \
 		-a region=$*)
+	touch crawls/$*-flatmates.done
 
 watch-%:
-	watch 'cat trademe/logs/$*-flatmates.log | grep $(LOG_LEVEL)'
+	watch -n 0.1 'cat trademe/data/$*-flatmates.csv | \
+				  wc -l | \
+				  xargs echo Rows scraped: ; \
+		          cat trademe/logs/$*-flatmates.log | \
+		          grep $(LOG_LEVEL) | \
+		          tail -n 30;'
 
 watch-logs:
 	watch -n 0.1 'tail -n 2 trademe/logs/*-flatmates.log'
@@ -44,21 +51,27 @@ docker:
 	docker build -t $(IMAGE) . && \
 	docker push $(IMAGE)
 
+pull-docker:
+	docker pull $(IMAGE)
+
 .PHONY: run-docker
 run-docker:
 	$(DCMD) $(IMAGE) bash
 
 .PHONY: run-docker-root
 run-docker-root:
-	# Start docker interactive as root
 	-docker run --rm -it -e HOME=/work -v $$(pwd):/work -w /work $(IMAGE) bash
 
-clean-crawls:
+clean-%:
+	(cd trademe && rm -rf crawls/$*-flatmates.crawl data/$*-flatmates.csv logs/$*-flatmates.csv)
+
+clean_crawls:
 	(cd trademe && rm -rf crawls/* logs/* data/*)
 
 .PHONY: clean-cache
-clean-cache:
-	find . -type d | \
-	grep -oE $(shell echo $(addprefix [A-Za-z_/\.]+/, $(CACHE_FOLDERS)) | sed -e 's/ /|/g') | \
+clean_cache:
+	find . | \
+	grep -oE '$(shell echo $(addprefix [A-Za-z0-9_/\\.]+/\\, $(CACHE)) | \
+	sed -e 's/ /|/g')' | \
 	uniq | \
 	xargs rm -rf
