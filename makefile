@@ -27,9 +27,9 @@ watch-%:
 	watch -n 0.1 'cat trademe/data/$*-flatmates.csv | \
 				  wc -l | \
 				  xargs echo Rows scraped: ; \
-		          cat trademe/logs/$*-flatmates.log | \
-		          grep $(LOG_LEVEL) | \
-		          tail -n 30;'
+				  cat trademe/logs/$*-flatmates.log | \
+				  grep $(LOG_LEVEL) | \
+				  tail -n 30;'
 
 watch-logs:
 	watch -n 0.1 'tail -n 2 trademe/logs/*-flatmates.log'
