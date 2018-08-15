@@ -60,7 +60,7 @@ run-docker:
 
 .PHONY: run-docker-root
 run-docker-root:
-	-docker run --rm -it -e HOME=/work -v $$(pwd):/work -w /work $(IMAGE) bash
+	-docker run --rm -it -u root:root -e HOME=/work -v $$(pwd):/work -w /work $(IMAGE) bash
 
 clean-%:
 	(cd trademe && rm -rf crawls/$*-flatmates.crawl data/$*-flatmates.csv logs/$*-flatmates.log)
