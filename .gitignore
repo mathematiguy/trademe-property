@@ -121,3 +121,4 @@ trademe/data/*.csv
 trademe/crawls/*.crawl
 analysis/*.ipynb
 trademe/crawls/*.done
+.conda/
