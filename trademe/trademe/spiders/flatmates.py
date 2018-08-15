@@ -4,8 +4,11 @@ import warnings
 
 def get_page_count(flat_response):
     view_digits = flat_response.xpath('//*[@id="DetailsFooter_PageViewsPanel"]/img/@alt').extract()
-    view_count = int(''.join(view_digits))
-    return view_count
+    view_digits = ''.join(view_digits)
+    if len(view_digits) == 0:
+        return 0
+    else:
+        return int(''.join(view_digits))
 
 def normalize_variable_name(var_name):
 	return var_name.replace(":", "").replace(" ", "_").lower()
