@@ -6,7 +6,7 @@ DCMD ?= docker run --rm -u $$(id -u):$$(id -g) -e HOME=/work -v $$(pwd):/work -w
 CACHE ?= .config .ipynb_checkpoints .cache .ipython .jupyter .local .ipython .npm .bash_history .python_history
 PROJECT_ROOT := $(shell git rev-parse --show-toplevel)
 START_URL ?= trademe.co.nz/flatmates-wanted/$(DEFAULT_REGION)/
-LOG_LEVEL ?= DEBUG
+LOG_LEVEL ?= INFO
 
 .PHONY: crawl
 crawl: crawl-$(DEFAULT_REGION)
@@ -20,8 +20,8 @@ crawl-%:
 		-s JOBDIR=crawls/$*-flatmates.crawl \
 		--loglevel $(LOG_LEVEL) \
 		--logfile logs/$*-flatmates.log \
-		-a region=$*)
-	touch crawls/$*-flatmates.done
+		-a region=$* && \
+	touch crawls/$*-flatmates.done)
 
 watch-%:
 	watch -n 0.1 'cat trademe/data/$*-flatmates.csv | \
@@ -29,14 +29,14 @@ watch-%:
 				  xargs echo Rows scraped: ; \
 				  cat trademe/logs/$*-flatmates.log | \
 				  grep $(LOG_LEVEL) | \
-				  tail -n 30;'
+				  tail -n 20;'
 
 watch-logs:
 	watch -n 0.1 'tail -n 2 trademe/logs/*-flatmates.log'
 
 .PHONY: jupyter
 jupyter:
-	$(DCMD) -p 8888:8888 $(IMAGE) jupyter lab
+	$(DCMD) -p 8888:8888 $(IMAGE) start.sh jupyter lab
 
 .PHONY: scrapy-shell
 scrapy-shell:
@@ -56,14 +56,14 @@ pull-docker:
 
 .PHONY: run-docker
 run-docker:
-	$(DCMD) $(IMAGE) bash
+	$(DCMD) -it $(IMAGE) bash
 
 .PHONY: run-docker-root
 run-docker-root:
 	-docker run --rm -it -e HOME=/work -v $$(pwd):/work -w /work $(IMAGE) bash
 
 clean-%:
-	(cd trademe && rm -rf crawls/$*-flatmates.crawl data/$*-flatmates.csv logs/$*-flatmates.csv)
+	(cd trademe && rm -rf crawls/$*-flatmates.crawl data/$*-flatmates.csv logs/$*-flatmates.log)
 
 clean_crawls:
 	(cd trademe && rm -rf crawls/* logs/* data/*)
