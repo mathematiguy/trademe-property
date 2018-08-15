@@ -3,7 +3,7 @@ REGIONS := northland auckland waikato bay-of-plenty gisborne hawke\'s-bay tarana
 DEFAULT_REGION ?= auckland
 IMAGE ?= $(DOCKER_ID_USER)/trademe:latest
 DCMD ?= docker run --rm -u $$(id -u):$$(id -g) -e HOME=/work -v $$(pwd):/work -w /work
-CACHE ?= .config .ipynb_checkpoints .cache .ipython .jupyter .local .ipython .npm .bash_history .python_history
+CACHE ?= .bash_history .cache .conda .config .ipynb_checkpoints .ipython .jupyter .local .npm .python_history __pycache__
 PROJECT_ROOT := $(shell git rev-parse --show-toplevel)
 START_URL ?= trademe.co.nz/flatmates-wanted/$(DEFAULT_REGION)/
 LOG_LEVEL ?= INFO
@@ -71,7 +71,7 @@ clean_crawls:
 .PHONY: clean-cache
 clean_cache:
 	find . | \
-	grep -oE '$(shell echo $(addprefix [A-Za-z0-9_/\\.]+/\\, $(CACHE)) | \
+	grep -oE '$(shell echo $(addprefix [A-Za-z0-9_/\\.]+/, $(CACHE)) | \
 	sed -e 's/ /|/g')' | \
 	uniq | \
 	xargs rm -rf
