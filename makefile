@@ -20,8 +20,7 @@ crawl-%:
 		-s JOBDIR=crawls/$*-flatmates.crawl \
 		--loglevel $(LOG_LEVEL) \
 		--logfile logs/$*-flatmates.log \
-		-a region=$* && \
-	touch crawls/$*-flatmates.done)
+		-a region=$*)
 
 watch-%:
 	watch -n 0.1 'cat trademe/data/$*-flatmates.csv | \
