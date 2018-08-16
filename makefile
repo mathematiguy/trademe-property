@@ -2,11 +2,23 @@ DOCKER_ID_USER := mathematiguy
 REGIONS := northland auckland waikato bay-of-plenty gisborne hawke\'s-bay taranaki manawatu-wanganui wellington nelson-tasman marlborough west-coast canterbury otago southland
 DEFAULT_REGION ?= auckland
 IMAGE ?= $(DOCKER_ID_USER)/trademe:latest
-DCMD ?= docker run --rm -u $$(id -u):$$(id -g) -e HOME=/work -v $$(pwd):/work -w /work
+DATA_PATH ?= trademe/data/
+USER_GROUP ?= $$(id -u):$$(id -g)
+DCMD ?= docker run --rm -e HOME=/work -v $$(pwd):/work -w /work
 CACHE ?= .bash_history .cache .conda .config .ipynb_checkpoints .ipython .jupyter .local .npm .python_history __pycache__
 PROJECT_ROOT := $(shell git rev-parse --show-toplevel)
 START_URL ?= trademe.co.nz/flatmates-wanted/$(DEFAULT_REGION)/
 LOG_LEVEL ?= INFO
+
+.PHONY: build-flatmates
+build-flatmates: data/flatmates.csv
+
+data/flatmates.csv: scripts/build-flatmates.py \
+	$(addprefix $(DATA_PATH), $(addsuffix -flatmates.csv, $(REGIONS)))
+	$(DCMD) $(USER_GROUP) $(IMAGE) python3 $< \
+		--data-path $(DATA_PATH) \
+		--log-level $(LOG_LEVEL) \
+		--output-path $@
 
 .PHONY: crawl
 crawl: crawl-$(DEFAULT_REGION)
@@ -15,12 +27,15 @@ crawl_all: $(addprefix crawl-, $(REGIONS))
 
 crawl-%:
 	(cd trademe && \
-	$(DCMD) $(IMAGE) scrapy crawl flatmates \
+	$(DCMD) $(USER_GROUP) $(IMAGE) scrapy crawl flatmates \
 		-o data/$*-flatmates.csv \
 		-s JOBDIR=crawls/$*-flatmates.crawl \
 		--loglevel $(LOG_LEVEL) \
 		--logfile logs/$*-flatmates.log \
 		-a region=$*)
+
+$(DATA_PATH)%-flatmates.csv:
+	echo $*
 
 watch-%:
 	watch -n 0.1 'cat trademe/data/$*-flatmates.csv | \
@@ -35,15 +50,15 @@ watch-logs:
 
 .PHONY: jupyter
 jupyter:
-	$(DCMD) -p 8888:8888 $(IMAGE) start.sh jupyter lab
+	$(DCMD) -u root:root -p 8888:8888 $(IMAGE) start.sh jupyter lab
 
 .PHONY: scrapy-shell
 scrapy-shell:
-	-(cd trademe && $(DCMD) $(IMAGE) scrapy shell $(START_URL))
+	-(cd trademe && $(DCMD) $(USER_GROUP) $(IMAGE) scrapy shell $(START_URL))
 
 .PHONY: trademe-docker
 trademe-docker:
-	-(cd trademe && $(DCMD) $(IMAGE) bash)
+	-(cd trademe && $(DCMD) $(USER_GROUP) $(IMAGE) bash)
 
 .PHONY: docker
 docker: 
@@ -55,7 +70,7 @@ pull-docker:
 
 .PHONY: run-docker
 run-docker:
-	$(DCMD) -it $(IMAGE) bash
+	$(DCMD) -it $(USER_GROUP) $(IMAGE) bash
 
 .PHONY: run-docker-root
 run-docker-root:
@@ -70,7 +85,7 @@ clean_crawls:
 .PHONY: clean-cache
 clean_cache:
 	find . | \
-	grep -oE '$(shell echo $(addprefix [A-Za-z0-9_/\\.]+/, $(CACHE)) | \
+	grep -oE '$(shell echo $(addprefix .+/, $(CACHE)) | \
 	sed -e 's/ /|/g')' | \
 	uniq | \
 	xargs rm -rf
