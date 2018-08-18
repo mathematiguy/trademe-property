@@ -31,28 +31,33 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data-path', default='trademe/data',
                         help="data directory")
-    parser.add_argument('--output-name', default='flatmates.csv',
+    parser.add_argument('--output-path', default='flatmates.csv',
                         help="path to put flatmates.csv")
     parser.add_argument('--log-level', default='INFO',
                         help="Log level")
     
     args = parser.parse_args()
 
-    logging.basicConfig(level=args.log_level)
+    logging.basicConfig(
+        level=args.log_level,
+        format='[%(asctime)s] | line %(lineno)d | %(levelname)s | %(message)s',
+        datefmt='%H:%M:%S')
 
     data_paths = [os.path.join(args.data_path, f) for f in  os.listdir(args.data_path) if f.endswith(".csv")]
     data_dfs = [read_data(fp) for fp in data_paths]
     
     for df in data_dfs:
+        # log details for each table
         logger.debug("%d columns", df.shape[1])
         logger.debug("Column names: %s", df.columns)
         logger.debug("df.head():\n%s", df.head())
+
     data_df = pd.concat(data_dfs, axis = 0, sort = False)
     
     logger.info("Output:\n%s", data_df.head())
 
-    logger.info("Writing output to: %s", args.output_name)
-    data_df.to_csv(args.output_name, index = False)
+    logger.info("Writing output to: %s", args.output_path)
+    data_df.to_csv(args.output_path, index = False)
 
 
 if __name__ == "__main__":
