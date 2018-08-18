@@ -1,26 +1,36 @@
 # -*- coding: utf-8 -*-
+import re
 import scrapy
 import warnings
 
-def get_page_count(flat_response):
+
+def get_view_count(flat_response):
     view_digits = flat_response.xpath('//*[@id="DetailsFooter_PageViewsPanel"]/img/@alt').extract()
     view_digits = ''.join(view_digits)
-    if len(view_digits) == 0:
-        return 0
-    else:
-        return int(''.join(view_digits))
+    result = '' if len(view_digits) == 0 else ''.join(view_digits)
+    return result
+
 
 def normalize_variable_name(var_name):
 	return var_name.replace(":", "").replace(" ", "_").lower()
 
+
+def clean_values(text):
+    text = text.replace("<br>", "\n")
+    text = '\n\n'.join([s.strip() for s in re.findall('<td>([^<]+)</td>', text, flags=re.MULTILINE)])
+    text = text.strip()
+    return text
+
+
 class FlatmatesSpider(scrapy.Spider):
     name = 'flatmates'
     allowed_domains = ['trademe.co.nz']
+    start_urls = []
 
     def __init__(self, *args, **kwargs):
         region = kwargs.pop('region', []) 
         if region:
-            self.start_urls = ['https://www.trademe.co.nz/flatmates-wanted/' + region]
+            self.start_urls.append('https://www.trademe.co.nz/flatmates-wanted/' + region)
         self.logger.info(self.start_urls)
         super(FlatmatesSpider, self).__init__(*args, **kwargs)
 
@@ -47,18 +57,20 @@ class FlatmatesSpider(scrapy.Spider):
 
         attribute_names  = [normalize_variable_name(t.strip()) \
         	for t in response.xpath('//table[@id="ListingAttributes"]/tr/th/text()').extract()]
-        attribute_values = [t.strip() \
-        	for t in response.xpath('//table[@id="ListingAttributes"]/tr/td/text()').extract()]
+
+        attribute_values = [clean_values(t.extract()) \
+        	for t in response.xpath('//table[@id="ListingAttributes"]/tr/td')]
+        assert len(attribute_names) == len(attribute_values), \
+            "attribute_names and attribute_values have different lengths"
 
         results = dict(zip(attribute_names, attribute_values))
         div_pattern = '//div[contains(@class, "{}")]/text()'
 
         results['url']        = response.url
-        results['title']      = [t.strip() for t in response.xpath('//h1/text()').extract()]
-        results['bedrooms']   = [t.strip() for t in response.xpath('//h1/text()').re("[\d\+<>]+ bedrooms?")]
-        results['rent']       = [t.strip() for t in response.xpath(div_pattern.format("title-price")).re("\d+")]
-        results['id_number']  = [t.strip() for t in response.xpath(div_pattern.format("property-listing-id")).extract()]
-        results['date']       = [t.strip() for t in response.xpath(div_pattern.format("listing-number-box")).extract()]
-        results['view_count'] = get_page_count(response)
+        results['title']      = (response.xpath('//h1/text()').extract_first().strip())
+        results['rent']       = (response.xpath(div_pattern.format("title-price")).extract_first().strip())
+        results['id_number']  = (response.xpath(div_pattern.format("property-listing-id")).extract_first().strip())
+        results['date']       = (response.xpath(div_pattern.format("listing-number-box")).extract_first().strip())
+        results['view_count'] = get_view_count(response)
 
         yield results
