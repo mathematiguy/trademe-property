@@ -67,10 +67,10 @@ class FlatmatesSpider(scrapy.Spider):
         div_pattern = '//div[contains(@class, "{}")]/text()'
 
         results['url']        = response.url
-        results['title']      = (response.xpath('//h1/text()').extract_first().strip())
-        results['rent']       = (response.xpath(div_pattern.format("title-price")).extract_first().strip())
-        results['id_number']  = (response.xpath(div_pattern.format("property-listing-id")).extract_first().strip())
-        results['date']       = (response.xpath(div_pattern.format("listing-number-box")).extract_first().strip())
+        results['title']      = response.xpath('//h1/text()').extract_first().strip()
+        results['rent']       = response.xpath(div_pattern.format("title-price")).extract_first().strip()
+        results['id_number']  = response.xpath(div_pattern.format("property-listing-id")).extract_first().strip()
+        results['date']       = response.xpath(div_pattern.format("listing-number-box")).extract_first().strip()
         results['view_count'] = get_view_count(response)
 
         yield results
