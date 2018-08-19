@@ -75,7 +75,8 @@ run-docker:
 run-docker-root:
 	-docker run --rm -it -e HOME=/work -v $$(pwd):/work -w /work -u root:root $(IMAGE) bash
 
-JUPYTER_PASSWORD ?= password
+JUPYTER_IMAGE ?= jupyter/scipy-notebook:177037d09156
+JUPYTER_PASSWORD ?= jupyter
 .PHONY: jupyter
 jupyter:
 	$(DCMD) -u root:root \
@@ -84,7 +85,7 @@ jupyter:
 		-e NB_USER=$$USER \
 		-e NB_UID=$(shell id -u) \
 		-e NB_GID=$(shell id -g) \
-		jupyter/scipy-notebook \
+		$(IMAGE)  \
 		jupyter lab \
 		--allow-root \
 		--NotebookApp.password=$(shell $(DCMD) jupyter/scipy-notebook \
