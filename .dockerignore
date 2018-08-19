@@ -1,0 +1,11 @@
+.bash_history
+.cache
+.conda
+.config
+.ipynb_checkpoints
+.ipython
+.jupyter
+.local
+.npm
+.python_history
+**/__pycache__

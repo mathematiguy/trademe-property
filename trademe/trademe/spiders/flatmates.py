@@ -2,6 +2,7 @@
 import re
 import scrapy
 import warnings
+from datetime import datetime
 
 
 def get_view_count(flat_response):
@@ -26,6 +27,7 @@ class FlatmatesSpider(scrapy.Spider):
     name = 'flatmates'
     allowed_domains = ['trademe.co.nz']
     start_urls = []
+    current_time = datetime.now().strftime("%a %d %b %Y")
 
     def __init__(self, *args, **kwargs):
         region = kwargs.pop('region', []) 
@@ -66,11 +68,12 @@ class FlatmatesSpider(scrapy.Spider):
         results = dict(zip(attribute_names, attribute_values))
         div_pattern = '//div[contains(@class, "{}")]/text()'
 
-        results['url']        = response.url
-        results['title']      = response.xpath('//h1/text()').extract_first().strip()
-        results['rent']       = response.xpath(div_pattern.format("title-price")).extract_first().strip()
-        results['id_number']  = response.xpath(div_pattern.format("property-listing-id")).extract_first().strip()
-        results['date']       = response.xpath(div_pattern.format("listing-number-box")).extract_first().strip()
-        results['view_count'] = get_view_count(response)
+        results['url']         = response.url
+        results['title']       = response.xpath('//h1/text()').extract_first().strip()
+        results['rent']        = response.xpath(div_pattern.format("title-price")).extract_first().strip()
+        results['id_number']   = response.xpath(div_pattern.format("property-listing-id")).extract_first().strip()
+        results['listed_date'] = response.xpath(div_pattern.format("listing-number-box")).extract_first().strip()
+        results['view_count']  = get_view_count(response)
+        results['current_time'] = self.current_time
 
         yield results
