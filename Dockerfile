@@ -20,6 +20,4 @@ RUN apt-get update && \
 COPY requirements.txt /root/requirements.txt
 RUN pip install -r /root/requirements.txt
 
-RUN conda install -y -c conda-forge altair vega_datasets jupyterlab
-
 USER $NB_UID
