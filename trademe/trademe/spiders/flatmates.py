@@ -42,6 +42,7 @@ class FlatmatesSpider(scrapy.Spider):
             '//div[contains(@class, "flatmates-list-view-card-title")]/a/@href'
             ).extract()
         for href in flat_hrefs:
+            href = re.sub("\?.*", "", href)
             flat_href = response.urljoin(href)
             yield scrapy.Request(flat_href, callback = self.parse_flat)
 
