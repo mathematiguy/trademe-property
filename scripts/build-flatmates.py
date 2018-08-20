@@ -51,7 +51,7 @@ def process_data(filepath):
     Read and clean a csv at filepath
     """
     data_cols = ['additional_costs', 'available', 'bedrooms', 'couples_ok', 
-    	'current_flatmates', 'date', 'description', 'furnishings', 'id_number',
+    	'current_flatmates', 'listed_date', 'description', 'furnishings', 'id_number',
     	'ideal_flatmate', 'in_the_area', 'location', 'parking', 'rent', 'title', 
     	'url', 'view_count']
     df = pd.read_csv(filepath)
@@ -62,8 +62,8 @@ def process_data(filepath):
     df['area']   = df.location.str.extract(", ([A-z\s/]+), ", expand=False)
     df['suburb'] = df.location.str.extract("^([A-z\s/]+),", expand=False)
     df.loc[df.area.isna(), 'area'] = df.loc[df.area.isna(), 'suburb']
-
-    df['listed_date']    = infer_listed_date(df.date)
+    
+    df['listed_date']    = infer_listed_date(df.listed_date)
     df['available_date'] = infer_available_time(df.available)
 
     df['bedrooms']  = df.title.str.extract("([0-9\+]+) bedrooms?", expand=False)
@@ -81,6 +81,7 @@ def process_data(filepath):
 
 
 def main():
+    global logger
     logger = logging.getLogger(__name__)
     parser = argparse.ArgumentParser()
     parser.add_argument('--data-path', default='trademe/data',
