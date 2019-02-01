@@ -77,17 +77,19 @@ run-docker-root:
 
 JUPYTER_IMAGE ?= jupyter/scipy-notebook:177037d09156
 JUPYTER_PASSWORD ?= jupyter
+JUPYTER_PORT ?= 8888
 .PHONY: jupyter
 jupyter:
 	$(DCMD) -u root:root \
 		--rm -it \
-		-p 8888:8888 \
+		-p $(JUPYTER_PORT):$(JUPYTER_PORT) \
 		-e NB_USER=$$USER \
 		-e NB_UID=$(shell id -u) \
 		-e NB_GID=$(shell id -g) \
 		$(IMAGE)  \
 		jupyter lab \
 		--allow-root \
+		--port $(JUPYTER_PORT) \
 		--NotebookApp.password=$(shell $(DCMD) jupyter/scipy-notebook \
 			python -c \
 			"from IPython.lib import passwd; print(passwd('$(JUPYTER_PASSWORD)'))"\
